@@ -1,0 +1,46 @@
+---
+table: users
+description: Stores information about individual users
+
+fields: 
+  -name: user_id
+  -type: integer
+  -description: unique identifier for the user
+  -role: entity
+
+  -name: signup_date
+  -type: timestamp
+  -description: date and time when the user signed up
+  -role: dimension
+
+  -name: country
+  -type: varchar
+  -description: user's country, based on IP geolocation during signup.
+  -role: dimension
+
+  -name: device_type
+  -type: varchar
+  -description: The type of device used for signing up (e.g., iOS, Android, Web)
+  -role: dimension
+
+primary_key:
+  -user_id
+
+golden queries:
+  -name: user_signups_past_year
+  -description: Count of user signups for the past year
+  -sql: |
+     select count(1) as user_signups
+     from public.users u 
+     where
+     u.signup_date >= now() - interval '1 YEARS';
+
+  -name: signups_by_country_past_year
+  -description: count of user signups by country for the past year
+  -sql: |
+     select u.country, count(1) as user_signups
+     from public.users u 
+     where
+     u.signup_date >= now() - interval '1 YEARS'
+     group by
+     u.country;

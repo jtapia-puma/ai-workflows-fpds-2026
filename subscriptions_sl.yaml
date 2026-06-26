@@ -1,0 +1,68 @@
+---
+table: subscriptions
+description: Tracks user subscriptions to different plans
+
+fields:
+  -name: subscription_id 
+  -type: integer
+  -description: Unique identifier for the subscription
+  -role: entity
+
+  -name: user_id
+  -type: integer
+  -description: Foreign key linking the session directly to the users.user_id column
+  -role: relationship
+  -related_table: users
+  -related_field: user_id
+
+  -name: plan
+  -type: varchar
+  -description: The subscription plan (e.g., free, monthly, annual)
+  -role: dimension
+
+  -name: start_date
+  -type: timestamp
+  -description: Date when the subscription started.
+  -role: dimension
+
+  -name: end_date
+  -type: timestamp
+  -description: Date when the subscription ended (if applicable)
+  -role: dimension
+
+  -name: status
+  -type: varchar
+  -description: Current status of the subscription (e.g., active, canceled, expired)
+  -role: dimension
+
+primary_key: 
+  -subscription_id
+
+relationships:
+  -join_type: left_outer_join
+  -parent_table: users
+  -join_on: users.user_id = users.user_id
+  -purpose: To filter subscriptions by user, regions, or signup dates 
+
+golden queries:
+  -name: active_subscriptions_by_country
+  -description: count of active subscriptions by country
+  -sql: |
+    select u.country, count(s.subscription_id) active_subscriptions
+    from users as u
+    left join subscriptions s on u.user_id = s.user_id 
+    where
+    s.status = 'active'
+    group by
+    u.country;
+
+  -name: active_subscriptions_by_plan
+  -description: count of active subscriptions by plan type
+  -sql: |
+    select s.plan, count(s.subscription_id) active_subscriptions
+    from subscriptions s  
+    where
+    s.status = 'active'
+    group by
+    s.plan;
+

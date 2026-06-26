@@ -1,0 +1,70 @@
+---
+table: sessions
+description: Records user activity sessions
+
+fields:
+  -name: session_id
+  -type: integer
+  -description: Unique identifier for the session
+  -role: entity
+
+  -name: user_id
+  -type: integer
+  -description: Foreign key linking the session directly to the users.user_id column
+  -role: relationship
+  -related_table: users
+  -related_field: user_id
+
+  -name: session_date
+  -type: timestamp
+  -description: Date and time when the session occurred
+  -role: dimension
+
+  -name: duration_minutes
+  -type: integer
+  -description: Duration of the session in minutes
+  -role: metric
+
+  -name: activity_type
+  -type: varchar
+  -description: The main activity performed during the session (e.g., browse, listen, read)
+  -role: dimension
+
+primary_key: 
+  -session_id
+
+relationships:
+  -join_type: inner_join
+  -parent_table: users
+  -join_on: sessions.user_id = users.user_id
+  -purpose: To filter sessions by user, regions, or signup dates
+
+golden_queries: 
+  -name: user_sessions_past_year
+  -description: Count of sessions per user for the past year
+  -sql: |
+    select u.user_id, count(s.session_id) as sessions
+    from
+    users as u
+    join sessions as s
+    on u.user_id = s.user_id 
+    where
+    s.session_date >= now() - interval '1 YEAR'
+    group by
+    u.user_id ;
+
+  -name: avg_session_length_per_user
+  -description: average length of sessions per user
+  -sql: |
+    select u.user_id, avg(s.duration_minutes) as avg_session_length
+    from
+    users as u
+    join sessions as s
+    on u.user_id = s.user_id 
+    where
+    s.session_date >= now() - interval '1 YEAR'
+    group by
+    u.user_id ;
+
+
+

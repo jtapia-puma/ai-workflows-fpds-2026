@@ -1,0 +1,64 @@
+---
+
+table: payments
+description: Logs all payment transactions for subscriptions.
+
+fields: 
+  -name: payment_id
+  -type: integer
+  -description: Unique identifier for the payment.
+  -role: entity
+
+  -name: subscription_id
+  -type: integer
+  -description: Foreign key linking the apyments directly to the subscriptions.subscription_id column
+  -role: relationship
+  -related_table: subscriptions
+  -related_field: subscription_id
+
+  -name: payment_date
+  -type: timestamp
+  -description: Date when the payment was made.
+  -role: dimension
+
+  -name: amount_usd
+  -type: numeric
+  -description: The payment amount in USD.
+  -role: metric
+
+  -name: method
+  -type: varchar
+  -description: The payment method used (e.g., card, paypal)
+  -role: dimension
+
+primary_key: 
+  -payment_id
+
+relationships: 
+  -name: payments_to_subscriptions
+  -left_table: subscriptions
+  -right_table: payments
+  -join_type: left_outer_join
+  -relationship_columns:
+    -left_column: subscription_id
+    -right_colmn: subscription_id
+
+golden_queries:
+  -name: total_payment_amount_by_plan
+  -description: Total payment amount by plan type
+  -sql: |
+    select s.plan, sum(p.amount_usd) as total_payment_amount
+    from subscriptions s  
+    left join payments p on s.subscription_id = p.subscription_id 
+    group by
+    s.plan;
+  
+  -name: total_payment_amount_by_year
+  -desccription: Total payment amount by year
+  -sql: |
+    select extract(year from p.payment_date) as payment_year, sum(p.amount_usd) total_amount
+    from
+    payments as p
+    group by
+    1;
+
