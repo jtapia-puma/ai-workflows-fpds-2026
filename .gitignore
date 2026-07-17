@@ -1,0 +1,9 @@
+
+# Local env secrets
+**/.env
+**/.env.*
+
+# Nested projects with their own GitHub repos
+data-cleaning-agent/
+data-analyst-agent/
+eda-workflow/
